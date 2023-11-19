@@ -1,0 +1,63 @@
+const express=require("express");
+const bodyParser = require("body-parser");
+const http = require("http");
+const cors = require("cors");
+const app = express();
+const port = 3000;
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+app.use(express.json());
+app.use(cors());
+app.use(express.urlencoded({ extended : false }));
+app.use(bodyParser.json());
+const server = http.createServer(app);
+
+var mysql = require('mysql');
+var connection = mysql.createConnection({
+  host: 'sql12.freesqldatabase.com',
+  user: 'sql12663091',
+  password: 'nrLVkDuEZL',
+  database:'sql12663091',
+  port: 3306,
+});
+connection.connect(function(err) {
+  if (err) console.log(err);
+  else{
+     console.log("Mysql database Connected!");
+     var sql = "CREATE TABLE logs (level VARCHAR(255),message VARCHAR(255),resourceId VARCHAR(255),timestamp VARCHAR(255),traceId VARCHAR(255),spanId VARCHAR(255),commit VARCHAR(255))";
+     connection.query(sql,function(err,res){
+	if(err)console.log(err);
+	else{
+	   console.log("Table Created");
+	};
+     });
+  };
+});
+
+const client = mongoose.connect("mongodb+srv://ajay:ajstyles89@cluster0.zvrc2.mongodb.net/dyte-assignment?retryWrites=true&w=majority",{useNewUrlParser: true, useUnifiedTopology: true},(req,res)=>{
+	console.log("Connected to database");
+});
+
+
+app.post("/ingestlogs",(req,res)=>{
+    console.log(req.body);
+    connection.connect(function(err) {
+    var sql = `Insert into logs (level,message,sourceId,timestamp,traceId,spanId,commit) Values (${req.body.level},${req.body.message},${req.body.resourceId},${req.body.timestamp},${req.body.traceId},${req.body.spanId},${req.body.commit})`;
+    connection.query(sql,function(err,res){
+        if(err)console.log(err);
+        else{
+            console.log("1 record inserted");
+        }
+    });
+
+    });
+
+});
+
+
+
+
+server.listen(port,"0.0.0.0",()=>{
+	console.log(`server is running on port ${port}`);
+});
